@@ -41,6 +41,7 @@ const buildDeck = () => {
       deck.push(card);
     }
   }
+  console.log("Built deck", deck);
   return deck;
 };
 
@@ -49,25 +50,131 @@ const Card = ({ onClick, rank, suit, faceUp } = { faceUp: true }) => {
     return (
       <div className={"card faceUp " + colors[suit]} onClick={onClick}>
         {rank}
+        {suit}
       </div>
     );
   } else {
-    return <div className="card faceDown"></div>;
+    return <div className="card faceDown" onClick={onClick}></div>;
   }
 };
 
 const App = () => {
-  const [deck, setDeck] = useState(buildDeck());
+  //const [deck, setDeck] = useState(buildDeck());
+  const [playerHand, setPlayerHand] = useState([
+    { rank: 12, suit: DIAMOND },
+    { rank: 2, suit: DIAMOND },
+    { rank: 3, suit: DIAMOND },
+    { rank: 4, suit: DIAMOND },
+    { rank: 6, suit: DIAMOND },
+  ]);
+  const [otherHand, setOtherHand] = useState([
+    { rank: 1, suit: CLUB },
+    { rank: 2, suit: CLUB },
+    { rank: 3, suit: CLUB },
+    { rank: 4, suit: CLUB },
+    { rank: 6, suit: CLUB },
+  ]);
+  const [playerPlayed, setPlayerPlayed] = useState([]);
+  const [otherPlayed, setOtherPlayed] = useState([]);
+
+  const dealHands = () => {
+    // All the cards
+    let deck = buildDeck();
+    // Player A
+    let playerDeck = [];
+    // Player B
+    let otherDeck = [];
+    // Which deck I'm dealing to NOW
+    let currentDeck = deck;
+    // While I still have cards in the deck
+    while (deck.length > 0) {
+      // Pick a random card
+      let randomIndex = Math.floor(Math.random() * deck.length);
+      // Take the card out of the deck
+      let card = deck.splice(randomIndex, 1)[0];
+      // Give it to deck
+      currentDeck.push(card);
+      // Change deck to other deck
+      if (currentDeck == playerDeck) {
+        currentDeck = otherDeck;
+      } else {
+        currentDeck = playerDeck;
+      }
+    }
+
+    setPlayerHand(playerDeck);
+    setOtherHand(otherDeck);
+  };
+  const playCard = () => {
+    console.log("PLAY CARD!");
+    let updatedHand = [...playerHand];
+    let updatedOther = [...otherHand];
+    let newCard = updatedHand.pop();
+    let otherCard = updatedOther.pop();
+
+    setPlayerPlayed([newCard]);
+    setOtherPlayed([otherCard]);
+    setPlayerHand(updatedHand);
+    setOtherHand(updatedOther);
+    console.log("updatedHand,", updatedHand, "=>", newCard);
+    console.log("updatedOther", updatedOther, "=>", otherCard);
+  };
+
+  const play4MoreCards = () => {};
+
+  const doWar = (hand1, hand2, played1, played2) => {
+    hand1 = [...hand1];
+    hand2 = [...hand2];
+    let lastCard1 = played1[played1.length - 1];
+    let lastCard2 = played2[played2.length - 1];
+    if (!lastCard1 || !lastCard2) {
+      return;
+    }
+    if (lastCard1.rank == lastCard2.rank) {
+      // If there is a tie...
+      // Repeat 3 times...
+      for (let i = 0; i < 4; i++) {
+        if (hand1.length) {
+          // if there is a card
+          // add it to the hand...
+          played1 = [...played1, hand1.pop()];
+        }
+        if (hand2.length) {
+          played2 = [...played2, hand2.pop()];
+        }
+      }
+      setPlayerHand(hand1);
+      setOtherHand(hand2);
+      setPlayerPlayed(played1);
+      setOtherPlayed(played2);
+      return; // end function here -- they need to click again!
+    } else {
+      if (lastCard1.rank > lastCard2.rank) {
+        let newCards = [...played1, ...played2, ...hand1];
+        setPlayerHand(newCards);
+      } else {
+        let newCards = [...played1, ...played2, ...hand2];
+        setOtherHand(newCards);
+      }
+      setPlayerPlayed([]);
+      setOtherPlayed([]);
+    }
+  };
+
+  const doNextThing = () => {
+    if (playerHand.length == 0 || otherHand.length == 0) {
+      dealHands();
+    } else if (playerPlayed.length == 0) {
+      playCard();
+    } else {
+      doWar(playerHand, otherHand, playerPlayed, otherPlayed);
+    }
+  };
 
   return (
-    <main>
+    <main onClick={doNextThing}>
       <h1>War!</h1>
       <p>A Card Game</p>
-      {/*<button onClick={deal}>Deal Cards</button>*/}
-      {/*} <div className="hand playerA">{hand.length} cards...</div>
-      vs.
-      <div className="hand playerB">{hand2.length} cards...</div>
-  <button onClick={doRound}>Play!</button>*/}
       <div
         style={{
           display: "flex",
@@ -77,7 +184,7 @@ const App = () => {
         }}
       >
         <div className="player-a">
-          Player A
+          Player A ({playerHand.length})
           <Card faceUp={false} />
         </div>
         <div
@@ -88,11 +195,32 @@ const App = () => {
             justifyContent: "center",
           }}
         >
-          <Card suit={DIAMOND} rank="7" faceUp={true} />
+          <div
+            style={{
+              display: "flex",
+              gap: 3,
+            }}
+          >
+            {playerPlayed.map((c) => (
+              <Card faceUp={true} rank={c.rank} suit={c.suit} />
+            ))}
+          </div>
+          vs
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row-reverse",
+              gap: 3,
+            }}
+          >
+            {otherPlayed.map((c) => (
+              <Card faceUp={true} rank={c.rank} suit={c.suit} />
+            ))}
+          </div>
         </div>
         <div className="player-b">
-          Player B
-          <Card faceUp={false} />
+          Player B ({otherHand.length})
+          <Card faceUp={false} onClick={playCard} />
         </div>
       </div>
     </main>

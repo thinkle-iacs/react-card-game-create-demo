@@ -13,6 +13,9 @@ body {
   border: 3px solid white;
   border-radius: 8px;
   background-color: white;
+  display: grid;
+  place-content: center;
+  font-size: x-large;
 }
 /* End starter code */
 
