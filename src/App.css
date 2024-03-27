@@ -1,7 +1,28 @@
 /* Starter Code for a simple App */
 body {
-    background-color: #05053a;
-    color: #fafaff;
-    font-family: Verdana, Geneva, Tahoma, sans-serif;
+  background-color: #05053a;
+  color: #fafaff;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  --card-width: 140px;
+  --card-height: 200px;
+}
+
+.card {
+  width: var(--card-width);
+  height: var(--card-height);
+  border: 3px solid white;
+  border-radius: 8px;
+  background-color: white;
 }
 /* End starter code */
+
+.red {
+  color: red;
+}
+.black {
+  color: black;
+}
+
+.faceDown {
+  background-color: #c6093b;
+}
